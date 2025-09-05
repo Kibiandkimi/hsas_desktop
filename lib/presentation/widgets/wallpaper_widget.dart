@@ -6,7 +6,7 @@ import 'package:hsas_desktop/presentation/widgets/drawing_painter.dart';
 class WallpaperWidget extends StatelessWidget {
   final String? wallpaperPath;
   final List<DrawingPath> drawingPaths;
-  final bool isDrawingEnabled; // New property
+  final bool isDrawingEnabled;
   final Function(DragStartDetails)? onPanStart;
   final Function(DragUpdateDetails)? onPanUpdate;
 
@@ -14,38 +14,46 @@ class WallpaperWidget extends StatelessWidget {
     super.key,
     required this.wallpaperPath,
     required this.drawingPaths,
-    this.isDrawingEnabled = false, // Default to false
+    this.isDrawingEnabled = false,
     this.onPanStart,
     this.onPanUpdate,
   });
 
   @override
   Widget build(BuildContext context) {
-    Widget content = CustomPaint(
+    // This is the transparent canvas where drawing happens.
+    Widget drawingCanvas = CustomPaint(
       painter: DrawingPainter(paths: drawingPaths),
-      child: Container(
-        decoration: BoxDecoration(
-          image: wallpaperPath != null && File(wallpaperPath!).existsSync()
-              ? DecorationImage(
-                  image: FileImage(File(wallpaperPath!)),
-                  fit: BoxFit.cover,
-                )
-              : const DecorationImage(
-                  image: AssetImage('assets/default_wallpaper.jpg'),
-                  fit: BoxFit.cover,
-                ),
-        ),
-      ),
+      child: Container(), // The painter needs a child to define its drawing area.
     );
 
+    // If drawing is enabled, wrap the canvas in a gesture detector.
     if (isDrawingEnabled) {
-      return GestureDetector(
+      drawingCanvas = GestureDetector(
         onPanStart: onPanStart,
         onPanUpdate: onPanUpdate,
-        child: content,
+        child: drawingCanvas,
       );
     }
 
-    return content;
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        // Layer 1: The Wallpaper Image (at the bottom)
+        if (wallpaperPath != null && File(wallpaperPath!).existsSync())
+          Image.file(
+            File(wallpaperPath!),
+            fit: BoxFit.cover,
+          )
+        else
+          Image.asset(
+            'assets/default_wallpaper.jpg',
+            fit: BoxFit.cover,
+          ),
+
+        // Layer 2: The Drawing Canvas (always on top of the image)
+        drawingCanvas,
+      ],
+    );
   }
 }

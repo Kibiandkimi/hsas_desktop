@@ -36,17 +36,21 @@ class DesktopModel {
   List<IconModel> icons;
   List<FolderPortalModel> portals;
   List<DrawingPath> drawingPaths;
-  DesktopSettingsModel settings; // New field for settings
+  DesktopSettingsModel settings;
 
+  // --- CONSTRUCTOR CORRECTED HERE ---
   DesktopModel({
     required this.id,
     required this.name,
     this.wallpaperPath,
-    this.icons = const [],
-    this.portals = const [],
-    this.drawingPaths = const [],
+    List<IconModel>? icons, // Use nullable types for constructor parameters
+    List<FolderPortalModel>? portals,
+    List<DrawingPath>? drawingPaths,
     DesktopSettingsModel? settings,
-  }) : settings = settings ?? DesktopSettingsModel(); // Initialize with default settings
+  })  : this.icons = icons ?? [], // If null, create a new MODIFIABLE list
+        this.portals = portals ?? [], // If null, create a new MODIFIABLE list
+        this.drawingPaths = drawingPaths ?? [], // If null, create a new MODIFIABLE list
+        this.settings = settings ?? DesktopSettingsModel();
 
   factory DesktopModel.fromJson(Map<String, dynamic> json) => _$DesktopModelFromJson(json);
   Map<String, dynamic> toJson() => _$DesktopModelToJson(this);

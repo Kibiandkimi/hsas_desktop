@@ -55,6 +55,8 @@ dependencies:
   # 用于JSON序列化/反序列化
   json_annotation: ^4.9.0
 
+  file_icon: ^1.0.0 # Add this line
+
 
 dev_dependencies:
   flutter_test:

@@ -21,6 +21,9 @@ FolderPortalModel _$FolderPortalModelFromJson(Map<String, dynamic> json) =>
       sortType:
           $enumDecodeNullable(_$SortTypeEnumMap, json['sortType']) ??
           SortType.nameAsc,
+      clickBehavior:
+          $enumDecodeNullable(_$ClickBehaviorEnumMap, json['clickBehavior']) ??
+          ClickBehavior.doubleClick,
     );
 
 Map<String, dynamic> _$FolderPortalModelToJson(FolderPortalModel instance) =>
@@ -28,6 +31,7 @@ Map<String, dynamic> _$FolderPortalModelToJson(FolderPortalModel instance) =>
       'id': instance.id,
       'path': instance.path,
       'sortType': _$SortTypeEnumMap[instance.sortType]!,
+      'clickBehavior': _$ClickBehaviorEnumMap[instance.clickBehavior]!,
       'position': const OffsetConverter().toJson(instance.position),
       'size': const SizeConverter().toJson(instance.size),
     };
@@ -37,4 +41,9 @@ const _$SortTypeEnumMap = {
   SortType.nameDesc: 'nameDesc',
   SortType.dateAsc: 'dateAsc',
   SortType.dateDesc: 'dateDesc',
+};
+
+const _$ClickBehaviorEnumMap = {
+  ClickBehavior.singleClick: 'singleClick',
+  ClickBehavior.doubleClick: 'doubleClick',
 };

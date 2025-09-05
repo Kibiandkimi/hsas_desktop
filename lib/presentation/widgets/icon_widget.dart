@@ -1,3 +1,4 @@
+import 'package:file_icon/file_icon.dart';
 import 'package:flutter/material.dart';
 import 'package:hsas_desktop/data/models/desktop_model.dart';
 import 'package:hsas_desktop/data/models/icon_model.dart';
@@ -7,7 +8,7 @@ import 'package:hsas_desktop/utils/app_constants.dart';
 class IconWidget extends StatelessWidget {
   final IconModel iconData;
   final ClickBehavior clickBehavior;
-  final double iconSizeScale; // New property
+  final double iconSizeScale;
   final SystemService _systemService = SystemService();
 
   IconWidget({
@@ -34,11 +35,10 @@ class IconWidget extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              iconData.type == IconType.folder ? Icons.folder : Icons.insert_drive_file,
+            // Use the FileIcon widget to get an icon based on the file name/extension
+            FileIcon(
+              iconData.name, // The package uses the name to determine the icon
               size: scaledIconSize,
-              color: Colors.white,
-              shadows: const [Shadow(blurRadius: 5.0, color: Colors.black54)],
             ),
             const SizedBox(height: 4),
             Text(

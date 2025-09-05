@@ -37,21 +37,15 @@ DesktopModel _$DesktopModelFromJson(Map<String, dynamic> json) => DesktopModel(
   id: json['id'] as String,
   name: json['name'] as String,
   wallpaperPath: json['wallpaperPath'] as String?,
-  icons:
-      (json['icons'] as List<dynamic>?)
-          ?.map((e) => IconModel.fromJson(e as Map<String, dynamic>))
-          .toList() ??
-      const [],
-  portals:
-      (json['portals'] as List<dynamic>?)
-          ?.map((e) => FolderPortalModel.fromJson(e as Map<String, dynamic>))
-          .toList() ??
-      const [],
-  drawingPaths:
-      (json['drawingPaths'] as List<dynamic>?)
-          ?.map((e) => DrawingPath.fromJson(e as Map<String, dynamic>))
-          .toList() ??
-      const [],
+  icons: (json['icons'] as List<dynamic>?)
+      ?.map((e) => IconModel.fromJson(e as Map<String, dynamic>))
+      .toList(),
+  portals: (json['portals'] as List<dynamic>?)
+      ?.map((e) => FolderPortalModel.fromJson(e as Map<String, dynamic>))
+      .toList(),
+  drawingPaths: (json['drawingPaths'] as List<dynamic>?)
+      ?.map((e) => DrawingPath.fromJson(e as Map<String, dynamic>))
+      .toList(),
   settings: json['settings'] == null
       ? null
       : DesktopSettingsModel.fromJson(json['settings'] as Map<String, dynamic>),
