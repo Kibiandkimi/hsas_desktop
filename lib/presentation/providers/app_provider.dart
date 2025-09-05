@@ -22,6 +22,10 @@ class AppProvider extends ChangeNotifier {
   List<ScheduledSwitch> _schedules = [];
   AppSettingsModel _appSettings = AppSettingsModel();
 
+  // New state for drawing mode
+  String? drawingDesktopId;
+  bool get isDrawingMode => drawingDesktopId != null;
+
   List<DesktopModel> get desktops => _desktops;
   int get activeDesktopIndex => _activeDesktopIndex;
   DesktopModel get activeDesktop => _desktops[_activeDesktopIndex];
@@ -74,28 +78,17 @@ class AppProvider extends ChangeNotifier {
   }
 
   // --- Icon and Portal Management ---
-  Future<void> addIconToCurrentDesktop(Offset position) async {
-    FilePickerResult? result = await FilePicker.platform.pickFiles(
-      allowMultiple: false,
-      type: FileType.any,
-      dialogTitle: '请选择文件或文件夹',
+  void addIconToCurrentDesktop(String path, String name, IconType type, Offset position) {
+    final newIcon = IconModel(
+      id: _uuid.v4(),
+      name: name,
+      path: path,
+      position: position,
+      type: type,
     );
-
-    if (result != null && result.files.single.path != null) {
-      final path = result.files.single.path!;
-      final isDirectory = await Directory(path).exists();
-
-      final newIcon = IconModel(
-        id: _uuid.v4(),
-        name: result.files.single.name,
-        path: path,
-        position: position,
-        type: isDirectory ? IconType.folder : IconType.file,
-      );
-      activeDesktop.icons.add(newIcon);
-      notifyListeners();
-      saveState();
-    }
+    activeDesktop.icons.add(newIcon);
+    notifyListeners();
+    saveState();
   }
 
   Future<void> addPortalToCurrentDesktop(Offset position) async {
@@ -157,23 +150,24 @@ class AppProvider extends ChangeNotifier {
   }
 
   // --- Drawing Management ---
-  void addDrawingPath(DrawingPath path) {
-    activeDesktop.drawingPaths.add(path);
+  void enterDrawingMode(String desktopId) {
+    drawingDesktopId = desktopId;
     notifyListeners();
-    saveState();
   }
 
-  void updateCurrentDrawingPath(Offset point) {
-    if (activeDesktop.drawingPaths.isNotEmpty) {
-      activeDesktop.drawingPaths.last.points.add(point);
-      notifyListeners();
+  void exitDrawingModeAndSaveChanges(String desktopId, List<DrawingPath> newPaths) {
+    final index = _desktops.indexWhere((d) => d.id == desktopId);
+    if (index != -1) {
+      _desktops[index].drawingPaths = newPaths;
     }
-  }
-
-  void clearDrawings() {
-    activeDesktop.drawingPaths.clear();
+    drawingDesktopId = null;
     notifyListeners();
     saveState();
+  }
+
+  void exitDrawingModeWithoutSaving() {
+    drawingDesktopId = null;
+    notifyListeners();
   }
 
   // --- Desktop and Settings Management ---

@@ -1,3 +1,5 @@
+import 'dart:io';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:hsas_desktop/data/models/desktop_model.dart';
@@ -21,22 +23,45 @@ class DesktopPage extends StatelessWidget {
       context: context,
       position: RelativeRect.fromLTRB(position.dx, position.dy, position.dx + 1, position.dy + 1),
       items: const [
-        PopupMenuItem<String>(value: 'add_icon', child: Text('添加图标/文件夹...')),
+        PopupMenuItem<String>(value: 'add_file', child: Text('添加文件...')),
+        PopupMenuItem<String>(value: 'add_folder', child: Text('添加文件夹...')),
         PopupMenuItem<String>(value: 'add_portal', child: Text('添加文件夹传送门...')),
         PopupMenuDivider(),
         PopupMenuItem<String>(value: 'clear_drawings', child: Text('清除涂鸦')),
       ],
-    ).then((value) {
+    ).then((value) async {
       if (value == null) return;
       switch (value) {
-        case 'add_icon':
-          appProvider.addIconToCurrentDesktop(position);
+        case 'add_file':
+          FilePickerResult? result = await FilePicker.platform.pickFiles();
+          if (result != null && result.files.single.path != null) {
+            appProvider.addIconToCurrentDesktop(
+              result.files.single.path!,
+              result.files.single.name,
+              IconType.file,
+              position,
+            );
+          }
+          break;
+        case 'add_folder':
+          String? directoryPath = await FilePicker.platform.getDirectoryPath();
+          if (directoryPath != null) {
+            appProvider.addIconToCurrentDesktop(
+              directoryPath,
+              directoryPath.split(Platform.pathSeparator).last,
+              IconType.folder,
+              position,
+            );
+          }
           break;
         case 'add_portal':
           appProvider.addPortalToCurrentDesktop(position);
           break;
         case 'clear_drawings':
-          appProvider.clearDrawings();
+          // This action is now implicitly handled by the drawing screen,
+          // but we can leave it here to clear all drawings at once.
+          final desktop = appProvider.activeDesktop;
+          appProvider.exitDrawingModeAndSaveChanges(desktop.id, []);
           break;
       }
     });
@@ -49,7 +74,7 @@ class DesktopPage extends StatelessWidget {
 
     return GestureDetector(
       onSecondaryTapDown: (details) => _showContextMenu(context, details),
-      child: DragTarget<Object>( // Accept any object
+      child: DragTarget<Object>(
         onAcceptWithDetails: (details) {
           final RenderBox renderBox = context.findRenderObject() as RenderBox;
           final localOffset = renderBox.globalToLocal(details.offset);
@@ -67,6 +92,7 @@ class DesktopPage extends StatelessWidget {
                 child: WallpaperWidget(
                   wallpaperPath: desktopData.wallpaperPath,
                   drawingPaths: desktopData.drawingPaths,
+                  isDrawingEnabled: false, // Drawing is disabled in normal view
                 ),
               ),
               ...desktopData.icons.map((iconData) {

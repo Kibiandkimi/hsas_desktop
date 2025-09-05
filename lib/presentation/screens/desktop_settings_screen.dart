@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:hsas_desktop/data/models/desktop_model.dart';
 import 'package:hsas_desktop/presentation/providers/app_provider.dart';
+import 'package:hsas_desktop/presentation/screens/drawing_screen.dart';
 
 class DesktopSettingsScreen extends StatefulWidget {
   final DesktopModel desktop;
@@ -49,6 +50,17 @@ class _DesktopSettingsScreenState extends State<DesktopSettingsScreen> {
             leading: const Icon(Icons.wallpaper, color: Colors.white),
             title: const Text('更换壁纸', style: TextStyle(color: Colors.white)),
             onTap: () => appProvider.updateDesktopWallpaper(widget.desktop.id),
+          ),
+          ListTile( // New "Edit Drawing" button
+            leading: const Icon(Icons.draw, color: Colors.white),
+            title: const Text('涂鸦编辑', style: TextStyle(color: Colors.white)),
+            onTap: () {
+              appProvider.enterDrawingMode(widget.desktop.id);
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => DrawingScreen(desktop: widget.desktop)),
+              );
+            },
           ),
           const SizedBox(height: 24),
           const Text('交互设置', style: TextStyle(color: Colors.grey, fontSize: 16)),
