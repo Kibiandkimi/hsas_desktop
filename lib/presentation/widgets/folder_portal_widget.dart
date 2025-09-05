@@ -18,8 +18,6 @@ class FolderPortalWidget extends StatefulWidget {
 
 class _FolderPortalWidgetState extends State<FolderPortalWidget> {
   final SystemService _systemService = SystemService();
-
-  // State for navigation
   late String _currentPath;
   final List<String> _pathHistory = [];
   List<FileSystemEntity> _files = [];
@@ -34,7 +32,9 @@ class _FolderPortalWidgetState extends State<FolderPortalWidget> {
   @override
   void didUpdateWidget(covariant FolderPortalWidget oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.portalData.sortType != widget.portalData.sortType) {
+    // 当外部状态（如排序方式或点击方式）改变时，重新构建
+    if (oldWidget.portalData.sortType != widget.portalData.sortType ||
+        oldWidget.portalData.clickBehavior != widget.portalData.clickBehavior) {
       _loadAndSortFiles();
     }
   }
@@ -64,16 +64,11 @@ class _FolderPortalWidgetState extends State<FolderPortalWidget> {
         bool aIsFolder = a is Directory;
         bool bIsFolder = b is Directory;
         if (aIsFolder != bIsFolder) return aIsFolder ? -1 : 1;
-
         switch (widget.portalData.sortType) {
-          case SortType.nameAsc:
-            return a.path.toLowerCase().compareTo(b.path.toLowerCase());
-          case SortType.nameDesc:
-            return b.path.toLowerCase().compareTo(a.path.toLowerCase());
-          case SortType.dateAsc:
-            return a.statSync().modified.compareTo(b.statSync().modified);
-          case SortType.dateDesc:
-            return b.statSync().modified.compareTo(a.statSync().modified);
+          case SortType.nameAsc: return a.path.toLowerCase().compareTo(b.path.toLowerCase());
+          case SortType.nameDesc: return b.path.toLowerCase().compareTo(a.path.toLowerCase());
+          case SortType.dateAsc: return a.statSync().modified.compareTo(b.statSync().modified);
+          case SortType.dateDesc: return b.statSync().modified.compareTo(a.statSync().modified);
         }
       });
       if (mounted) setState(() => _files = files);
@@ -98,13 +93,12 @@ class _FolderPortalWidgetState extends State<FolderPortalWidget> {
           ),
           child: Column(
             children: [
-              // Header
               Row(
                 children: [
                   if (canNavigateBack)
                     IconButton(icon: const Icon(Icons.arrow_back, color: Colors.white), onPressed: _navigateBack)
                   else
-                    const SizedBox(width: 48), // Placeholder for alignment
+                    const SizedBox(width: 48),
                   Expanded(
                     child: Text(
                       _currentPath.split(Platform.pathSeparator).last,
@@ -112,15 +106,56 @@ class _FolderPortalWidgetState extends State<FolderPortalWidget> {
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
-                  PopupMenuButton(
+                  // --- 关键修复：更新 PopupMenuButton ---
+                  PopupMenuButton<dynamic>(
                     icon: const Icon(Icons.more_vert, color: Colors.white),
+                    tooltip: '更多选项',
+                    onSelected: (value) {
+                      // 根据返回值的类型，调用不同的更新方法
+                      if (value is SortType) {
+                        appProvider.updatePortalSortType(widget.portalData.id, value);
+                      } else if (value is ClickBehavior) {
+                        appProvider.updatePortalClickBehavior(widget.portalData.id, value);
+                      }
+                    },
                     itemBuilder: (context) => [
-                      // ... Sort options ...
+                      const PopupMenuItem(enabled: false, child: Text('排序方式')),
+                      CheckedPopupMenuItem(
+                        value: SortType.nameAsc,
+                        checked: widget.portalData.sortType == SortType.nameAsc,
+                        child: const Text('按名称 (A-Z)'),
+                      ),
+                      CheckedPopupMenuItem(
+                        value: SortType.nameDesc,
+                        checked: widget.portalData.sortType == SortType.nameDesc,
+                        child: const Text('按名称 (Z-A)'),
+                      ),
+                      CheckedPopupMenuItem(
+                        value: SortType.dateAsc,
+                        checked: widget.portalData.sortType == SortType.dateAsc,
+                        child: const Text('按日期 (旧→新)'),
+                      ),
+                      CheckedPopupMenuItem(
+                        value: SortType.dateDesc,
+                        checked: widget.portalData.sortType == SortType.dateDesc,
+                        child: const Text('按日期 (新→旧)'),
+                      ),
+                      const PopupMenuDivider(),
+                      const PopupMenuItem(enabled: false, child: Text('打开方式')),
+                      CheckedPopupMenuItem(
+                        value: ClickBehavior.singleClick,
+                        checked: widget.portalData.clickBehavior == ClickBehavior.singleClick,
+                        child: const Text('单击打开'),
+                      ),
+                      CheckedPopupMenuItem(
+                        value: ClickBehavior.doubleClick,
+                        checked: widget.portalData.clickBehavior == ClickBehavior.doubleClick,
+                        child: const Text('双击打开'),
+                      ),
                     ],
                   ),
                 ],
               ),
-              // Content
               Expanded(
                 child: GridView.builder(
                   padding: const EdgeInsets.all(8),
@@ -132,6 +167,7 @@ class _FolderPortalWidgetState extends State<FolderPortalWidget> {
                     final file = _files[index];
                     final isFolder = file is Directory;
                     return GestureDetector(
+                      // 这里使用的就是 portalData 自己的 clickBehavior
                       onTap: widget.portalData.clickBehavior == ClickBehavior.singleClick
                           ? () => isFolder ? _navigateTo(file.path) : _systemService.openPath(file.path, context)
                           : null,
@@ -157,9 +193,9 @@ class _FolderPortalWidgetState extends State<FolderPortalWidget> {
             ],
           ),
         ),
-        // Resize Handle
         Positioned(
-          right: -10, bottom: -10,
+          right: -10,
+          bottom: -10,
           child: GestureDetector(
             onPanUpdate: (details) {
               final newWidth = (widget.portalData.size.width + details.delta.dx).clamp(200.0, 800.0);
@@ -169,8 +205,12 @@ class _FolderPortalWidgetState extends State<FolderPortalWidget> {
             child: MouseRegion(
               cursor: SystemMouseCursors.resizeDownRight,
               child: Container(
-                width: 20, height: 20,
-                decoration: BoxDecoration(color: Colors.white.withOpacity(0.5), shape: BoxShape.circle),
+                width: 20,
+                height: 20,
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.5),
+                  shape: BoxShape.circle,
+                ),
                 child: const Icon(Icons.open_in_full, size: 12),
               ),
             ),

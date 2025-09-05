@@ -58,8 +58,6 @@ class DesktopPage extends StatelessWidget {
           appProvider.addPortalToCurrentDesktop(position);
           break;
         case 'clear_drawings':
-          // This action is now implicitly handled by the drawing screen,
-          // but we can leave it here to clear all drawings at once.
           final desktop = appProvider.activeDesktop;
           appProvider.exitDrawingModeAndSaveChanges(desktop.id, []);
           break;
@@ -74,11 +72,13 @@ class DesktopPage extends StatelessWidget {
 
     return GestureDetector(
       onSecondaryTapDown: (details) => _showContextMenu(context, details),
+      // 关键修复 #4: DragTarget 现在是父级，负责接收所有可拖动对象
       child: DragTarget<Object>(
         onAcceptWithDetails: (details) {
-          final RenderBox renderBox = context.findRenderObject() as RenderBox;
-          final localOffset = renderBox.globalToLocal(details.offset);
+          // 这里的 details.offset 是相对于这个 DragTarget (即整个桌面) 的正确局部坐标
+          final localOffset = details.offset;
 
+          // 根据拖动的对象类型，调用正确的更新方法
           if (details.data is IconModel) {
             appProvider.updateIconPosition((details.data as IconModel).id, localOffset);
           } else if (details.data is FolderPortalModel) {
@@ -88,13 +88,14 @@ class DesktopPage extends StatelessWidget {
         builder: (context, candidateData, rejectedData) {
           return Stack(
             children: [
+              // 壁纸层
               Positioned.fill(
                 child: WallpaperWidget(
                   wallpaperPath: desktopData.wallpaperPath,
                   drawingPaths: desktopData.drawingPaths,
-                  isDrawingEnabled: false, // Drawing is disabled in normal view
                 ),
               ),
+              // 图标层
               ...desktopData.icons.map((iconData) {
                 return Positioned(
                   left: iconData.position.dx,
@@ -107,14 +108,28 @@ class DesktopPage extends StatelessWidget {
                   ),
                 );
               }).toList(),
+              // Folder Portal 层
               ...desktopData.portals.map((portalData) {
                 return Positioned(
                   left: portalData.position.dx,
                   top: portalData.position.dy,
+                  // 关键修复 #5: Draggable 在这里，包裹 FolderPortalWidget
                   child: Draggable<FolderPortalModel>(
                     data: portalData,
-                    feedback: Material(color: Colors.transparent, child: FolderPortalWidget(portalData: portalData)),
-                    childWhenDragging: Opacity(opacity: 0.4, child: FolderPortalWidget(portalData: portalData)),
+                    // feedback 是拖动时显示的样子
+                    feedback: Material(
+                      color: Colors.transparent,
+                      child: Opacity(
+                        opacity: 0.7,
+                        child: FolderPortalWidget(portalData: portalData),
+                      ),
+                    ),
+                    // childWhenDragging 是原来位置留下的占位符
+                    childWhenDragging: Opacity(
+                      opacity: 0.3,
+                      child: FolderPortalWidget(portalData: portalData),
+                    ),
+                    // child 是正常显示的样子
                     child: FolderPortalWidget(portalData: portalData),
                   ),
                 );

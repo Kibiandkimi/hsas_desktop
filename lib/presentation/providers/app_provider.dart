@@ -149,6 +149,17 @@ class AppProvider extends ChangeNotifier {
     }
   }
 
+  void updatePortalClickBehavior(String portalId, ClickBehavior behavior) {
+    try {
+      final portal = activeDesktop.portals.firstWhere((p) => p.id == portalId);
+      portal.clickBehavior = behavior;
+      notifyListeners();
+      saveState();
+    } catch (e) {
+      print("Portal not found: $portalId");
+    }
+  }
+
   // --- Drawing Management ---
   void enterDrawingMode(String desktopId) {
     drawingDesktopId = desktopId;
