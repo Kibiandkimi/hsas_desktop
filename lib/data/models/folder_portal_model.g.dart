@@ -18,12 +18,23 @@ FolderPortalModel _$FolderPortalModelFromJson(Map<String, dynamic> json) =>
           : const SizeConverter().fromJson(
               json['size'] as Map<String, dynamic>,
             ),
+      sortType:
+          $enumDecodeNullable(_$SortTypeEnumMap, json['sortType']) ??
+          SortType.nameAsc,
     );
 
 Map<String, dynamic> _$FolderPortalModelToJson(FolderPortalModel instance) =>
     <String, dynamic>{
       'id': instance.id,
       'path': instance.path,
+      'sortType': _$SortTypeEnumMap[instance.sortType]!,
       'position': const OffsetConverter().toJson(instance.position),
       'size': const SizeConverter().toJson(instance.size),
     };
+
+const _$SortTypeEnumMap = {
+  SortType.nameAsc: 'nameAsc',
+  SortType.nameDesc: 'nameDesc',
+  SortType.dateAsc: 'dateAsc',
+  SortType.dateDesc: 'dateDesc',
+};

@@ -13,11 +13,15 @@ IconModel _$IconModelFromJson(Map<String, dynamic> json) => IconModel(
   position: const OffsetConverter().fromJson(
     json['position'] as Map<String, dynamic>,
   ),
+  type: $enumDecodeNullable(_$IconTypeEnumMap, json['type']) ?? IconType.file,
 );
 
 Map<String, dynamic> _$IconModelToJson(IconModel instance) => <String, dynamic>{
   'id': instance.id,
   'name': instance.name,
   'path': instance.path,
+  'type': _$IconTypeEnumMap[instance.type]!,
   'position': const OffsetConverter().toJson(instance.position),
 };
+
+const _$IconTypeEnumMap = {IconType.file: 'file', IconType.folder: 'folder'};

@@ -4,10 +4,13 @@ import 'package:hsas_desktop/data/models/type_converters.dart';
 
 part 'folder_portal_model.g.dart';
 
+enum SortType { nameAsc, nameDesc, dateAsc, dateDesc }
+
 @JsonSerializable()
 class FolderPortalModel {
   final String id;
   String path;
+  SortType sortType; // New field
 
   @OffsetConverter()
   Offset position;
@@ -20,6 +23,7 @@ class FolderPortalModel {
     required this.path,
     required this.position,
     this.size = const Size(300, 200),
+    this.sortType = SortType.nameAsc, // Default sort order
   });
 
   factory FolderPortalModel.fromJson(Map<String, dynamic> json) => _$FolderPortalModelFromJson(json);

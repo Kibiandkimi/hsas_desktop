@@ -6,6 +6,33 @@ part of 'desktop_model.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
+DesktopSettingsModel _$DesktopSettingsModelFromJson(
+  Map<String, dynamic> json,
+) => DesktopSettingsModel(
+  clickBehavior:
+      $enumDecodeNullable(_$ClickBehaviorEnumMap, json['clickBehavior']) ??
+      ClickBehavior.singleClick,
+  showShutdownButton: json['showShutdownButton'] as bool? ?? true,
+  showSettingsButton: json['showSettingsButton'] as bool? ?? true,
+  showAllAppsButton: json['showAllAppsButton'] as bool? ?? true,
+  showMinimizeButton: json['showMinimizeButton'] as bool? ?? true,
+);
+
+Map<String, dynamic> _$DesktopSettingsModelToJson(
+  DesktopSettingsModel instance,
+) => <String, dynamic>{
+  'clickBehavior': _$ClickBehaviorEnumMap[instance.clickBehavior]!,
+  'showShutdownButton': instance.showShutdownButton,
+  'showSettingsButton': instance.showSettingsButton,
+  'showAllAppsButton': instance.showAllAppsButton,
+  'showMinimizeButton': instance.showMinimizeButton,
+};
+
+const _$ClickBehaviorEnumMap = {
+  ClickBehavior.singleClick: 'singleClick',
+  ClickBehavior.doubleClick: 'doubleClick',
+};
+
 DesktopModel _$DesktopModelFromJson(Map<String, dynamic> json) => DesktopModel(
   id: json['id'] as String,
   name: json['name'] as String,
@@ -25,6 +52,9 @@ DesktopModel _$DesktopModelFromJson(Map<String, dynamic> json) => DesktopModel(
           ?.map((e) => DrawingPath.fromJson(e as Map<String, dynamic>))
           .toList() ??
       const [],
+  settings: json['settings'] == null
+      ? null
+      : DesktopSettingsModel.fromJson(json['settings'] as Map<String, dynamic>),
 );
 
 Map<String, dynamic> _$DesktopModelToJson(DesktopModel instance) =>
@@ -35,4 +65,5 @@ Map<String, dynamic> _$DesktopModelToJson(DesktopModel instance) =>
       'icons': instance.icons.map((e) => e.toJson()).toList(),
       'portals': instance.portals.map((e) => e.toJson()).toList(),
       'drawingPaths': instance.drawingPaths.map((e) => e.toJson()).toList(),
+      'settings': instance.settings.toJson(),
     };

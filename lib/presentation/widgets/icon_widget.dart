@@ -1,38 +1,55 @@
 import 'package:flutter/material.dart';
+import 'package:hsas_desktop/data/models/desktop_model.dart';
 import 'package:hsas_desktop/data/models/icon_model.dart';
 import 'package:hsas_desktop/data/services/system_service.dart';
 import 'package:hsas_desktop/utils/app_constants.dart';
 
 class IconWidget extends StatelessWidget {
   final IconModel iconData;
+  final ClickBehavior clickBehavior;
+  final double iconSizeScale; // New property
   final SystemService _systemService = SystemService();
 
-  IconWidget({super.key, required this.iconData});
+  IconWidget({
+    super.key,
+    required this.iconData,
+    required this.clickBehavior,
+    this.iconSizeScale = 1.0,
+  });
 
   @override
   Widget build(BuildContext context) {
+    final double scaledIconSize = AppConstants.iconSize * iconSizeScale;
+
     return GestureDetector(
-      onTap: () => _systemService.openPath(iconData.path, context),
+      onTap: clickBehavior == ClickBehavior.singleClick
+          ? () => _systemService.openPath(iconData.path, context)
+          : null,
+      onDoubleTap: clickBehavior == ClickBehavior.doubleClick
+          ? () => _systemService.openPath(iconData.path, context)
+          : null,
       child: SizedBox(
-        width: AppConstants.iconSize + 24,
-        height: AppConstants.iconSize + 24,
+        width: scaledIconSize + 24,
+        height: scaledIconSize + 32,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(
-              Icons.folder, // 可根据文件类型改变
-              size: AppConstants.iconSize,
+            Icon(
+              iconData.type == IconType.folder ? Icons.folder : Icons.insert_drive_file,
+              size: scaledIconSize,
               color: Colors.white,
-              shadows: [Shadow(blurRadius: 5.0, color: Colors.black54)],
+              shadows: const [Shadow(blurRadius: 5.0, color: Colors.black54)],
             ),
             const SizedBox(height: 4),
             Text(
               iconData.name,
-              maxLines: 1,
+              maxLines: 2,
+              textAlign: TextAlign.center,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
+              style: TextStyle(
                 color: Colors.white,
-                shadows: [Shadow(blurRadius: 2.0, color: Colors.black)],
+                fontSize: 12 * iconSizeScale,
+                shadows: const [Shadow(blurRadius: 2.0, color: Colors.black)],
               ),
             ),
           ],
