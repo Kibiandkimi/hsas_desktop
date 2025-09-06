@@ -64,7 +64,7 @@ jobs:
     - name: build
       run: ./flutter/bin/flutter config --no-analytics && ./flutter/bin/flutter config --no-cli-animations && ./flutter/bin/flutter pub get && ./flutter/bin/flutter build macos --no-tree-shake-icons
     - name: bundle
-      run: tar -zcvf ./macos-release.tar.gz ./build/macos/Build/Products/Release/flutter_scom.app
+      run: tar -zcvf ./macos-release.tar.gz ./build/macos/Build/Products/Release/hsas_desktop.app
 
     - name: Upload a Build Artifact
       uses: actions/upload-artifact@v4.4.3
